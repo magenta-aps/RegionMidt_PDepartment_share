@@ -1,0 +1,17 @@
+<extension>
+	<modules>
+		<module>
+			<id>Customize user profile view - removed edit profile button</id>
+			<version>1.0</version>
+			<auto-deploy>true</auto-deploy>
+
+			<customizations>
+				<customization>
+					<targetPackageRoot>org.alfresco</targetPackageRoot>
+					<sourcePackageRoot>dk.magenta.rm.customize-userprofile.extensions</sourcePackageRoot>
+				</customization>
+			</customizations>
+
+		</module>
+	</modules>
+</extension>
