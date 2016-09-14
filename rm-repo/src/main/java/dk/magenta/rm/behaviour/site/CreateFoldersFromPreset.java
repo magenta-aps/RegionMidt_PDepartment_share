@@ -1,39 +1,31 @@
 package dk.magenta.rm.behaviour.site;
 
-import org.alfresco.email.server.EmailServerModel;
+import dk.magenta.rm.NodeExt;
+import org.alfresco.repo.node.NodeServicePolicies;
 import org.alfresco.repo.policy.Behaviour;
-import org.alfresco.repo.policy.JavaBehaviour;
 import org.alfresco.repo.policy.Behaviour.NotificationFrequency;
+import org.alfresco.repo.policy.JavaBehaviour;
 import org.alfresco.repo.policy.PolicyComponent;
-
-import org.alfresco.service.cmr.repository.StoreRef;
-import org.alfresco.service.cmr.site.SiteInfo;
+import org.alfresco.repo.site.SiteModel;
+import org.alfresco.repo.site.SiteServiceImpl;
+import org.alfresco.service.cmr.model.FileFolderService;
+import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ChildAssociationRef;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
+import org.alfresco.service.cmr.repository.StoreRef;
+import org.alfresco.service.cmr.site.SiteInfo;
 import org.alfresco.service.cmr.site.SiteService;
 import org.alfresco.service.cmr.tagging.TaggingService;
-import org.alfresco.service.namespace.QName;
-
-import org.alfresco.repo.node.NodeServicePolicies;
-import org.alfresco.repo.site.SiteModel;
-import org.alfresco.repo.site.SiteServiceImpl;
-
 import org.alfresco.service.transaction.TransactionService;
 
-import org.apache.log4j.Logger;
-
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import static dk.magenta.rm.scripts.PresetGlobal.*;
 import static org.alfresco.model.ContentModel.*;
 
-public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy {
-
-    private static Logger logger = Logger.getLogger(CreateEmailFolder.class);
+public class CreateFoldersFromPreset implements NodeServicePolicies.OnCreateNodePolicy {
 
     // Dependencies
     private NodeService nodeService;
@@ -41,6 +33,7 @@ public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy
     private TransactionService transactionService;
     private TaggingService taggingService;
     private PolicyComponent policyComponent;
+    private FileFolderService fileFolderService;
 
     public void setNodeService(NodeService nodeService)
     {
@@ -62,6 +55,10 @@ public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy
     {
         this.policyComponent = policyComponent;
     }
+    public void setFileFolderService(FileFolderService fileFolderService)
+    {
+        this.fileFolderService = fileFolderService;
+    }
 
     public void init() {
 
@@ -81,11 +78,12 @@ public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy
             return;
         }
 
-        // Only add inbox if the site has been created
+        // Only add preset folders if the site has been created
         if (nodeService.exists(siteRef)) {
             // Document Library for sites are created on first time a user enters it
             // Creating Document Library as SiteContainer to the new site
             SiteInfo siteInfo = siteService.getSite(siteRef);
+            String presetId = siteInfo.getSitePreset();
             String siteName = siteInfo.getShortName();
             NodeRef documentLibrary = SiteServiceImpl.getSiteContainer(
                     siteName,
@@ -95,16 +93,26 @@ public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy
                     transactionService,
                     taggingService);
 
-                // Add new folder called "Inbox" as child to the newly created site
-                Map<QName, Serializable> inboxProperties = new HashMap<QName, Serializable>();
-                inboxProperties.put(PROP_NAME, "Inbox");
-                NodeRef inbox = nodeService.createNode(documentLibrary, ASSOC_CONTAINS, QName.createQName("cm:inbox"), TYPE_FOLDER, inboxProperties).getChildRef();
+            // Checks which folders have already been created
+            List<String> existingFolders = new ArrayList<>();
+            List<ChildAssociationRef> folderChildren = nodeService.getChildAssocs(documentLibrary);
+            for (ChildAssociationRef folderChild:folderChildren) {
+                NodeRef child = folderChild.getChildRef();
+                existingFolders.add(nodeService.getProperty(child, PROP_NAME).toString());
+            }
 
-                // Add aspect emailserver:aliasable for folder Inbox
-                Map<QName, Serializable> aspectProperties = new HashMap<QName, Serializable>();
-                aspectProperties.put(EmailServerModel.PROP_ALIAS, siteName);
-                nodeService.addAspect(inbox, EmailServerModel.ASPECT_ALIASABLE, aspectProperties);
+            // Get folders from the preset and add them to the new site
+            List<NodeRef> source = NodeExt.getNodesByPath(new String[]{FOLDER_DATA_DICTIONARY, FOLDER_EXTENSION_PRESETS, FOLDER_FOLDER_SETUPS, "cm:" + presetId, "*"});
+            for (NodeRef folder: source) {
+                try {
+                    String folderName = nodeService.getProperty(folder, PROP_NAME).toString();
+                    // Only add folder if it does not already exist
+                    if(!existingFolders.contains(folderName))
+                        fileFolderService.copy(folder, documentLibrary, folderName);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
-

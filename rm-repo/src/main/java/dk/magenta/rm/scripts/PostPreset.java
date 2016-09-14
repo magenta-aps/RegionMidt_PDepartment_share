@@ -1,10 +1,11 @@
 package dk.magenta.rm.scripts;
 
+import dk.magenta.rm.NodeExt;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.MimetypeMap;
+import org.alfresco.service.cmr.model.FileFolderService;
+import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.*;
-import org.alfresco.service.cmr.search.ResultSet;
-import org.alfresco.service.cmr.search.SearchService;
 import org.alfresco.service.namespace.QName;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
@@ -29,34 +30,40 @@ import java.util.*;
 
 import static org.alfresco.model.ContentModel.*;
 import static dk.magenta.rm.scripts.PresetGlobal.*;
+import static org.alfresco.service.namespace.NamespaceService.*;
 
 public class PostPreset extends DeclarativeWebScript {
 
     private ContentService contentService;
     private NodeService nodeService;
-    private SearchService searchService;
+    private FileFolderService fileFolderService;
+    private NodeRef extensionPresetsFolder;
+    private NodeRef folderSetupsFolder;
+
+    public void setContentService(ContentService contentService) {
+        this.contentService = contentService;
+    }
+    public void setNodeService(NodeService nodeService) {
+        this.nodeService = nodeService;
+    }
+    public void setFileFolderService(FileFolderService fileFolderService) { this.fileFolderService = fileFolderService; }
 
     @Override
     protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
+        getExtensionPresetFolder();
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 
         // Get the parameter "site"
         Map<String, String> templateArgs = req.getServiceMatch().getTemplateVars();
         String siteName = templateArgs.get("site");
         String presetName = templateArgs.get("presetName");
+        String presetId = presetName.replace(' ', '-');
 
         // Find current site
-        StoreRef store = new StoreRef(StoreRef.PROTOCOL_WORKSPACE, "SpacesStore");
-        String siteQuery = "TYPE:\"cm:folder\" AND PATH:\"/app:company_home/st:sites/cm:" + siteName + "\"";
-        ResultSet siteResults = searchService.query(store, SearchService.LANGUAGE_FTS_ALFRESCO, siteQuery);
-        List<NodeRef> siteNodes = siteResults.getNodeRefs();
-        NodeRef siteNode = siteNodes.get(0);
+        NodeRef siteNode = NodeExt.getNodeByPath("st:sites/cm:" + siteName);
 
         //Find surf-config folder in current site
-        String surfConfigQuery = "+TYPE:\"cm:folder\" AND +PARENT:\"" + siteNode + "\" AND + ASPECT:\"sys:hidden\"";
-        ResultSet surfConfigResults = searchService.query(store, SearchService.LANGUAGE_FTS_ALFRESCO, surfConfigQuery);
-        List<NodeRef> surfConfigNodes = surfConfigResults.getNodeRefs();
-        NodeRef surfConfigNode = surfConfigNodes.get(0);
+        NodeRef surfConfigNode = NodeExt.getNodeByQuery("TYPE:\"cm:folder\" AND PARENT:\"" + siteNode + "\" AND ASPECT:\"sys:hidden\"");
 
         if (surfConfigNode != null) try {
 
@@ -80,7 +87,6 @@ public class PostPreset extends DeclarativeWebScript {
             Document presetDoc = docBuilder.newDocument();
             Element presetsElement = presetDoc.createElement("presets");
             Element presetElement = presetDoc.createElement("preset");
-            String presetId = presetName.replace(' ', '-');
             presetId = presetId.toLowerCase();
             presetElement.setAttribute("id", presetId);
             Element componentsElement = presetDoc.createElement("components");
@@ -164,32 +170,8 @@ public class PostPreset extends DeclarativeWebScript {
                 }
             }
 
-            // Find Extension Presets folder
-            String presetDirectoryQuery = DATA_DICTIONARY_QUERY_PATH + "/" + EXTENSION_FOLDER_ID + "\"";
-            ResultSet presetDirectoryResults = searchService.query(store, SearchService.LANGUAGE_FTS_ALFRESCO, presetDirectoryQuery);
-            //Create Extension Presets folder if none exists
-            NodeRef presetDirectoryNode = null;
-            if(presetDirectoryResults.length() == 0) {
-
-                // Get NodeRef for Data Dictionary folder
-                String dataDictionaryQuery = DATA_DICTIONARY_QUERY_PATH + "\"";
-                ResultSet dataDictionaryResults = searchService.query(store, SearchService.LANGUAGE_FTS_ALFRESCO, dataDictionaryQuery);
-                List<NodeRef> dataDictionaryNodes = dataDictionaryResults.getNodeRefs();
-                NodeRef dataDictionaryNode = dataDictionaryNodes.get(0);
-
-                // Create Extension Presets Folder
-                Map<QName,Serializable> properties = new HashMap<QName,Serializable>();
-                properties.put(PROP_NAME, EXTENSION_FOLDER_NAME);
-                presetDirectoryNode = nodeService.createNode(dataDictionaryNode, ASSOC_CONTAINS, EXTENSION_FOLDER_ID_QNAME, TYPE_FOLDER, properties).getChildRef();
-            }
-            else {
-                // Get NodeRef for Extension Presets folder
-                List<NodeRef> presetDirectoryNodes = presetDirectoryResults.getNodeRefs();
-                presetDirectoryNode = presetDirectoryNodes.get(0);
-            }
-
             //Create new preset file
-            OutputStream presetInputStream = createNewPresetFile(presetDirectoryNode, presetName);
+            OutputStream presetInputStream = createNewPresetFile(extensionPresetsFolder, presetName);
 
             // Write to new preset file
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -205,10 +187,27 @@ public class PostPreset extends DeclarativeWebScript {
             e.printStackTrace();
         }
 
+        createDocumentLibraryTemplate(presetName, presetId, siteName);
+
         // Respond with success
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("Status", "Success");
         return model;
+    }
+
+
+    private void createDocumentLibraryTemplate(String presetName, String presetId, String siteName) {
+        Map<QName,Serializable> properties = new HashMap<>();
+        properties.put(PROP_NAME, presetName);
+        NodeRef parent = nodeService.createNode(folderSetupsFolder, ASSOC_CONTAINS, QName.createQName(CONTENT_MODEL_1_0_URI, presetId), TYPE_FOLDER, properties).getChildRef();
+        List<NodeRef> source = NodeExt.getNodesByPath(new String[]{FOLDER_SITES, "cm:" + siteName, FOLDER_DOCUMENT_LIBRARY, "*"});
+        for (NodeRef folder: source) {
+            try {
+                fileFolderService.copy(folder, parent, nodeService.getProperty(folder, PROP_NAME).toString());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private OutputStream createNewPresetFile(NodeRef parent, String presetName)
@@ -216,7 +215,7 @@ public class PostPreset extends DeclarativeWebScript {
         String fileName = presetName + ".xml";
         Map<QName,Serializable> properties = new HashMap<QName,Serializable>();
         properties.put(PROP_NAME, fileName);
-        NodeRef presetNode = nodeService.createNode(parent, ASSOC_CONTAINS, QName.createQName("cm:" + fileName), TYPE_CONTENT, properties).getChildRef();
+        NodeRef presetNode = nodeService.createNode(parent, ASSOC_CONTAINS, QName.createQName(CONTENT_MODEL_1_0_URI, fileName), TYPE_CONTENT, properties).getChildRef();
         ContentWriter contentWriter = contentService.getWriter(presetNode, ContentModel.PROP_CONTENT, true);
         contentWriter.setMimetype(MimetypeMap.MIMETYPE_XML);
         return contentWriter.getContentOutputStream();
@@ -240,13 +239,24 @@ public class PostPreset extends DeclarativeWebScript {
         return null;
     }
 
-    public void setContentService(ContentService contentService) {
-        this.contentService = contentService;
-    }
-    public void setNodeService(NodeService nodeService) {
-        this.nodeService = nodeService;
-    }
-    public void setSearchService(SearchService searchService) {
-        this.searchService = searchService;
+    private void getExtensionPresetFolder()
+    {
+        // Get NodeRef for Extension Presets folder
+        extensionPresetsFolder = NodeExt.getNodeByPath(new String[]{FOLDER_DATA_DICTIONARY, FOLDER_EXTENSION_PRESETS});
+        if(extensionPresetsFolder == null) {
+
+            // Get NodeRef for Data Dictionary folder
+            NodeRef dataDictionaryNode = NodeExt.getNodeByPath(FOLDER_DATA_DICTIONARY);
+
+            // Create Extension Presets Folder
+            Map<QName,Serializable> properties = new HashMap<>();
+            properties.put(PROP_NAME, FOLDER_EXTENSION_PRESETS_NAME);
+            extensionPresetsFolder = nodeService.createNode(dataDictionaryNode, ASSOC_CONTAINS, FOLDER_EXTENSION_PRESETS_QNAME, TYPE_FOLDER, properties).getChildRef();
+
+            // Create folder for folder setups for presets
+            properties = new HashMap<>();
+            properties.put(PROP_NAME, FOLDER_FOLDER_SETUPS_NAME);
+            folderSetupsFolder = nodeService.createNode(extensionPresetsFolder, ASSOC_CONTAINS, FOLDER_FOLDER_SETUPS_QNAME, TYPE_FOLDER, properties).getChildRef();
+        }
     }
 }

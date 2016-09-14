@@ -36,13 +36,12 @@
 		  parent="webscript">
 		<property name="contentService" ref="contentService" />
 		<property name="nodeService" ref="NodeService" />
-		<property name="searchService" ref="searchService" />
+		<property name="fileFolderService" ref="fileFolderService" />
 	</bean>
 
 	<bean id="webscript.dk.magenta.rm.presets.preset.names.get"
 		  class="dk.magenta.rm.scripts.GetPresetNames"
 		  parent="webscript">
-		<property name="searchService" ref="searchService" />
 		<property name="nodeService" ref="NodeService" />
 	</bean>
 
@@ -50,6 +49,5 @@
 		  class="dk.magenta.rm.scripts.GetPresets"
 		  parent="webscript">
 		<property name="contentService" ref="contentService" />
-		<property name="searchService" ref="searchService" />
 	</bean>
 </beans>
