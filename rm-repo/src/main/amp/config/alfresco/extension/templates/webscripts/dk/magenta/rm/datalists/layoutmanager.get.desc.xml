@@ -1,0 +1,7 @@
+<webscript>
+    <shortname>layoutmanager</shortname>
+    <description>layoutmanager</description>
+    <url>/layoutmanager</url>
+    <authentication>user</authentication>
+    <format default="html"></format>
+</webscript>

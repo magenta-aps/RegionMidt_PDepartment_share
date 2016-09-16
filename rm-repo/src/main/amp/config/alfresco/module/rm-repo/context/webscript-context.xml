@@ -17,4 +17,16 @@
 	limitations under the License.
 -->
 <beans>
+
+
+	<!--webscript.notifications.get-->
+	<bean id="webscript.dk.magenta.rm.datalists.layoutmanager.get"
+		  class="dk.magenta.rm.scripts.datalists.LayoutManager"
+		  parent="webscript">
+		<property name="nodeService" ref="NodeService"/>
+	</bean>
+
+
+
+
 </beans>

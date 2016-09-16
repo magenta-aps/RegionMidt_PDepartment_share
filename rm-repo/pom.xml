@@ -64,6 +64,14 @@
             <artifactId>alfresco-repository</artifactId>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.jdom/jdom2 -->
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>jdom2</artifactId>
+            <version>2.0.6</version>
+        </dependency>
+
+
         <!-- If we are running tests then make the H2 Scripts available
              Note. tests are skipped when you are running -Pamp-to-war -->
         <dependency>
