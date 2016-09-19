@@ -62,16 +62,16 @@ public class LayoutManager extends DeclarativeWebScript {
         Document d = new Document();
 
 
-        try {
-            Scanner in = new Scanner(new FileReader("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/test-classes/alfresco/web-extension/share-config-custom.xml"));
-
-            while (in.hasNext()) {
-                System.out.println(in.next());
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Scanner in = new Scanner(new FileReader("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/test-classes/alfresco/web-extension/share-config-custom.xml"));
+//
+//            while (in.hasNext()) {
+//                System.out.println(in.next());
+//            }
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
 
 
@@ -79,7 +79,7 @@ public class LayoutManager extends DeclarativeWebScript {
 
             Document document = null;
             Element root = null;
-            File xmlFile = new File("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/test-classes/alfresco/web-extension/share-config-custom.xml");
+            File xmlFile = new File("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/share-war/WEB-INF/classes/alfresco/web-extension/share-config-custom.xml");
 
             if(xmlFile.exists()){
 
@@ -93,6 +93,20 @@ public class LayoutManager extends DeclarativeWebScript {
                 root = new Element("banque");
             }
 
+            List<Element> children = root.getChildren();
+
+            Iterator i = children.iterator();
+
+            while (i.hasNext()) {
+                Element e = (Element)i.next();
+
+                if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
+                    System.out.println(e.getAttributeValue("id"));
+                }
+            }
+
+
+
             Element compte = new Element("config");
             compte.setAttribute(new Attribute("idCompte", "ffsd"));
 //            compte.addContent(new Element("numCompte").setText(this.idCompte));
@@ -102,11 +116,11 @@ public class LayoutManager extends DeclarativeWebScript {
             root.addContent(compte);
             document.setContent(root);
 
-            FileWriter writer = new FileWriter("test.xml");
-            XMLOutputter outputter = new XMLOutputter();
-            outputter.output(document, writer);
-            outputter.output(document, System.out);
-            writer.close(); // close writer
+//            FileWriter writer = new FileWriter("test.xml");
+//            XMLOutputter outputter = new XMLOutputter();
+//            outputter.output(document, writer);
+//            outputter.output(document, System.out);
+//            writer.close(); // close writer
 
         } catch (IOException io) {
             System.out.println(io.getMessage());
@@ -127,7 +141,7 @@ public class LayoutManager extends DeclarativeWebScript {
         // Set up return model
         Map<String, Object> model = new HashMap<>();
 
-        System.out.println("hej1");
+//        System.out.println("hej1");
 
         this.test();
 
