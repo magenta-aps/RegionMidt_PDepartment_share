@@ -18,11 +18,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import org.alfresco.service.cmr.dictionary.TypeDefinition;
 import org.alfresco.service.cmr.repository.NodeService;
+import org.alfresco.service.cmr.repository.StoreRef;
+import org.alfresco.service.cmr.search.QueryConsistency;
+import org.alfresco.service.cmr.search.ResultSet;
+import org.alfresco.service.cmr.search.SearchParameters;
 import org.alfresco.service.cmr.security.PersonService;
+import org.alfresco.service.namespace.QName;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 import org.springframework.extensions.webscripts.*;
+
+import org.alfresco.service.cmr.search.SearchService;
+
+import org.alfresco.service.cmr.dictionary.DictionaryService;
 
 import java.io.*;
 import java.util.*;
@@ -37,10 +47,13 @@ public class LayoutManager extends DeclarativeWebScript {
 
 
     private NodeService nodeService;
-    private PersonService personService;
+    private DictionaryService dictionaryService;
 
     public void setNodeService(NodeService nodeService) {
         this.nodeService = nodeService;
+    }
+    public void setDictionaryService(DictionaryService dictionaryService) {
+        this.dictionaryService = dictionaryService;
     }
 
 
@@ -93,34 +106,25 @@ public class LayoutManager extends DeclarativeWebScript {
                 root = new Element("banque");
             }
 
-            List<Element> children = root.getChildren();
 
-            Iterator i = children.iterator();
+            root = this.removeLayouts(root, "ffsd");
 
-            while (i.hasNext()) {
-                Element e = (Element)i.next();
-
-                if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
-                    System.out.println(e.getAttributeValue("id"));
-                }
-            }
+//            Element compte = new Element("config");
+//            compte.setAttribute(new Attribute("idCompte", "ffsd"));
 
 
-
-            Element compte = new Element("config");
-            compte.setAttribute(new Attribute("idCompte", "ffsd"));
 //            compte.addContent(new Element("numCompte").setText(this.idCompte));
 //            compte.addContent(new Element("nom").setText(this.nom));
 //            compte.addContent(new Element("solde").setText(this.solde));
-
-            root.addContent(compte);
+//
+//            root.addContent(compte);
             document.setContent(root);
 
-//            FileWriter writer = new FileWriter("test.xml");
-//            XMLOutputter outputter = new XMLOutputter();
-//            outputter.output(document, writer);
-//            outputter.output(document, System.out);
-//            writer.close(); // close writer
+            FileWriter writer = new FileWriter("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/share-war/WEB-INF/classes/alfresco/web-extension/share-config-custom.xml");
+            XMLOutputter outputter = new XMLOutputter();
+            outputter.output(document, writer);
+            outputter.output(document, System.out);
+            writer.close(); // close writer
 
         } catch (IOException io) {
             System.out.println(io.getMessage());
@@ -130,6 +134,84 @@ public class LayoutManager extends DeclarativeWebScript {
 
 
 
+
+    }
+
+     private void getCustomLayouts() {
+
+
+         String OD_URI = "http://www.test.com/model/regionmidt/1.0";
+         String OD_MDL = "modela.concarde.dk";
+         String OD_PREFIX = "rm";
+
+         QName TYPE_DATALISTS = QName.createQName(OD_URI, "datalistmodel");
+         QName TYPE_MODELLA = QName.createQName(OD_MDL, "nummer3");
+
+         Collection<QName> c = dictionaryService.getSubTypes(TYPE_DATALISTS, true);
+         TypeDefinition t = dictionaryService.getType(TYPE_MODELLA);
+
+         System.out.println(t.getModel().getName().getLocalName());
+
+
+//         System.out.println(t);
+
+         Iterator i = c.iterator();
+
+         // du får namespace ud for modellen ( du skal kun bruge model navnet)  dette giver dig navnet:   System.out.println(t.getModel().getName().getLocalName());
+         // og du får navnet på typen ud (den er god nok)
+
+         while (i.hasNext()) {
+//             System.out.println(i.next());
+         }
+
+
+
+//        // hent alle layouts som nedarver fra vores custom - som er blevet lavet i modellen
+
+    // hent alle unikke objekter af typen rm:datalistmodel
+
+    // for hver af dem, hent deres layout og transform det til xml - til brug i share-config-custom
+
+
+    }
+//
+//    private void transformLayoutToXML(String layout) {
+//
+//    }
+//
+//
+//    private void addCustomLayouts(String allCustomLayouts) {
+//
+//    }
+
+
+    private Element removeLayouts(Element root, String layoutID) {
+
+        List<Element> children = root.getChildren();
+
+        Iterator i = children.iterator();
+
+        ArrayList childrenToRemove = new ArrayList();
+
+        while (i.hasNext()) {
+            Element e = (Element)i.next();
+
+            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
+                System.out.println(e.getAttributeValue("id"));
+            }
+
+            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals(layoutID)) {
+                // cant mess with the iterator at this point, so we have to pick it up to be removed after the iterator has finished
+                childrenToRemove.add(e.getName());
+            }
+        }
+
+        i = childrenToRemove.iterator();
+        while (i.hasNext()) {
+            root.removeChild((String)i.next());
+        }
+
+        return root;
 
     }
 
@@ -143,27 +225,14 @@ public class LayoutManager extends DeclarativeWebScript {
 
 //        System.out.println("hej1");
 
-        this.test();
+//        this.test();
 
-        model.put("hej", "hej");
+        this.getCustomLayouts();
+
+        model.put("hej", "The Layout of all custom datalists has been reloaded ");
 
         return model;
 
 
     }
-
-
 }
-
-// create
-//http://localhost:8080/alfresco/service/notifications?userName=fhp&message=duerdum&subject=hilsen&method=add&NODE_ID=3570b61b-a861-4a75-8a27-7b16393027cd&STORE_TYPE=workspace&STORE_ID=SpacesStore
-
-
-// setRead
-//http://localhost:8080/alfresco/service/notifications?method=setRead&NODE_ID=76e15607-5519-4ad6-915c-1c07086535f2&STORE_TYPE=workspace&STORE_ID=SpacesStore
-
-//http://178.62.194.129:8080/alfresco/service/notifications?method=setRead&NODE_ID=/f1115ab8-bf2f-408c-b5ee-72acfb14be4c&STORE_TYPE=workspace&STORE_ID=SpacesStore
-
-
-
-

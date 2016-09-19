@@ -13,15 +13,33 @@
         <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
         <!-- Import Alfresco System Model Definitions -->
         <import uri="http://www.alfresco.org/model/system/1.0" prefix="sys"/>
+        <import uri="http://www.alfresco.org/model/datalist/1.0" prefix="dl" />
     </imports>
 
     <!-- Custom namespace for your domain -->
     <namespaces>
         <namespace uri="http://www.mycompany.com/model/content/1.0" prefix="myc"/>
+        <namespace uri="http://www.test.com/model/regionmidt/1.0" prefix="rm" />
     </namespaces>
 
     <!-- ===============================================================================================================
         Constraints, Types, and Aspects go here...
         -->
+
+
+
+<types>
+    <type name="rm:datalistmodel">
+
+
+
+        <title>Skabelon for datalister</title>
+
+        <description>Skabelon for datalister</description>
+
+        <parent>dl:dataListItem</parent>
+
+    </type>
+</types>
 
 </model>

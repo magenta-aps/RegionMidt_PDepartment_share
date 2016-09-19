@@ -24,6 +24,7 @@
 		  class="dk.magenta.rm.scripts.datalists.LayoutManager"
 		  parent="webscript">
 		<property name="nodeService" ref="NodeService"/>
+		<property name="dictionaryService" ref="DictionaryService"/>
 	</bean>
 
 
