@@ -1,0 +1,6 @@
+<webscript>
+    <shortname>Folder Listing Utility</shortname>
+    <description>Java-backed implementation of listing folder contents</description>
+    <url>/layoutmanager</url>
+    <authentication>user</authentication>
+</webscript>

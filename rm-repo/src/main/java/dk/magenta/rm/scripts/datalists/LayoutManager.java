@@ -18,7 +18,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import org.alfresco.service.cmr.dictionary.TypeDefinition;
+import org.alfresco.query.PagingRequest;
+import org.alfresco.query.PagingResults;
+import org.alfresco.service.cmr.dictionary.*;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.repository.StoreRef;
 import org.alfresco.service.cmr.search.QueryConsistency;
@@ -32,9 +34,11 @@ import org.springframework.extensions.webscripts.*;
 
 import org.alfresco.service.cmr.search.SearchService;
 
-import org.alfresco.service.cmr.dictionary.DictionaryService;
+import org.alfresco.service.cmr.dictionary.CustomModelService;
+import org.alfresco.repo.dictionary.CustomModelServiceImpl;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.*;
 
 
@@ -48,13 +52,21 @@ public class LayoutManager extends DeclarativeWebScript {
 
     private NodeService nodeService;
     private DictionaryService dictionaryService;
+    private CustomModelServiceImpl customModelService;
 
     public void setNodeService(NodeService nodeService) {
         this.nodeService = nodeService;
     }
+
     public void setDictionaryService(DictionaryService dictionaryService) {
         this.dictionaryService = dictionaryService;
     }
+
+    public void setCustomModelService(CustomModelServiceImpl customModelService) {
+        this.customModelService = customModelService;
+    }
+
+
 
 
     public void test() {
@@ -160,15 +172,41 @@ public class LayoutManager extends DeclarativeWebScript {
          // du får namespace ud for modellen ( du skal kun bruge model navnet)  dette giver dig navnet:   System.out.println(t.getModel().getName().getLocalName());
          // og du får navnet på typen ud (den er god nok)
 
-         while (i.hasNext()) {
+//         while (i.hasNext()) {
 //             System.out.println(i.next());
+//         }
+
+//         ModelDefinition modella = dictionaryService.getModel(TYPE_MODELLA);
+
+         PagingResults<CustomModelDefinition> modelDefinitionPagingResults = customModelService.getCustomModels(new PagingRequest(100));
+
+         Iterator it = modelDefinitionPagingResults.getPage().iterator();
+
+//         while (it.hasNext()) {
+//
+//             CustomModelDefinition cmd = (CustomModelDefinition)it.next();
+//
+//             System.out.println(cmd.getName());
+//         }
+
+
+         CustomModelDefinition cs = customModelService.getCustomModel("navnet");
+         System.out.println("hej");
+
+         Collection<TypeDefinition> typeDefinitions = cs.getTypeDefinitions();
+
+         Iterator typeDeI = typeDefinitions.iterator();
+
+         while (typeDeI.hasNext()) {
+
+             TypeDefinition typeDefinition = (TypeDefinition)typeDeI.next();
+
+
          }
 
 
 
 //        // hent alle layouts som nedarver fra vores custom - som er blevet lavet i modellen
-
-    // hent alle unikke objekter af typen rm:datalistmodel
 
     // for hver af dem, hent deres layout og transform det til xml - til brug i share-config-custom
 
@@ -236,3 +274,6 @@ public class LayoutManager extends DeclarativeWebScript {
 
     }
 }
+
+// TODO: hent layout for hver custom type
+// omformningskode til xml

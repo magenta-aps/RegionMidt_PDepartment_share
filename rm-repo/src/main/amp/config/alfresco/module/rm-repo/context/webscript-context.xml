@@ -25,6 +25,7 @@
 		  parent="webscript">
 		<property name="nodeService" ref="NodeService"/>
 		<property name="dictionaryService" ref="DictionaryService"/>
+		<property name="CustomModelService" ref="customModelService"/>
 	</bean>
 
 

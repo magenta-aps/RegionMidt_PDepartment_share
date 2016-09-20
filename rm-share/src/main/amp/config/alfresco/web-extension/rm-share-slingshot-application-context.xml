@@ -23,4 +23,10 @@
         </property>
     </bean>
 
+    <!-- Presets manager - configured to walk a search path for preset definition files -->
+    <bean id="webscript.org.alfresco.dem.get" class="dk.magenta.rm.ReloadPresets" parent="baseScriptExtension">
+        <property name="extensionName" value="reloadPresets" />
+        <property name="customPresetsManager" ref="webframework.presets.manager" />
+    </bean>
+
 </beans>
