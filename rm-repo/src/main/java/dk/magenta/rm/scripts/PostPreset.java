@@ -14,6 +14,7 @@ import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -109,22 +110,41 @@ public class PostPreset extends DeclarativeWebScript {
 
                     // Get the component node and remove guid node
                     Node component = componentDoc.getDocumentElement();
-                    for(int i=0; i<component.getChildNodes().getLength(); i++)
-                        if(component.getChildNodes().item(i).getNodeName().equals("guid")) {
-                            component.removeChild(component.getChildNodes().item(i));
-                            component.removeChild(component.getChildNodes().item(i++));
+                    Boolean hasScope = false;
+                    for (int i = 0; i < component.getChildNodes().getLength(); i++) {
+
+                        String nodeName = component.getChildNodes().item(i).getNodeName();
+
+                        switch (nodeName) {
+                            case "guid":
+                                component.removeChild(component.getChildNodes().item(i).getNextSibling());
+                                component.removeChild(component.getChildNodes().item(i));
+                                // Reset i to the current element
+                                i--;
+                                break;
+                            case "scope":
+                                hasScope = true;
+                                break;
+                            case "source-id":
+                                String sourceIdText = component.getChildNodes().item(i).getTextContent();
+                                if (!pagePaths.contains(sourceIdText))
+                                    pagePaths.add(sourceIdText);
+                                String changedSourceIdText = sourceIdText.replace(siteName, "${siteid}");
+                                component.getChildNodes().item(i).setTextContent(changedSourceIdText);
+                                break;
                         }
-                        else if(component.getChildNodes().item(i).getNodeName().equals("source-id"))
-                        {
-                            String sourceIdText = component.getChildNodes().item(i).getTextContent();
-                            if(!pagePaths.contains(sourceIdText))
-                                pagePaths.add(sourceIdText);
-                            String changedSourceIdText = sourceIdText.replace(siteName, "${siteid}");
-                            component.getChildNodes().item(i).setTextContent(changedSourceIdText);
-                        }
+                    }
 
                     // Imports the node to presetDoc is needed to append it
                     Node importedNode = presetDoc.importNode(component, true);
+
+                    // Adds scope if not present
+                    if (!hasScope) {
+                        Node firstNode = importedNode.getFirstChild();
+                        Element scopeElement = presetDoc.createElement("scope");
+                        scopeElement.setTextContent("page");
+                        importedNode.insertBefore(scopeElement, firstNode);
+                    }
 
                     // Append node from components file to presets.xml
                     componentsElement.appendChild(importedNode);
@@ -258,5 +278,8 @@ public class PostPreset extends DeclarativeWebScript {
             properties.put(PROP_NAME, FOLDER_FOLDER_SETUPS_NAME);
             folderSetupsFolder = nodeService.createNode(extensionPresetsFolder, ASSOC_CONTAINS, FOLDER_FOLDER_SETUPS_QNAME, TYPE_FOLDER, properties).getChildRef();
         }
+        else
+            folderSetupsFolder = NodeExt.getNodeByPath(new String[]{FOLDER_DATA_DICTIONARY, FOLDER_EXTENSION_PRESETS, FOLDER_FOLDER_SETUPS});
+
     }
 }
