@@ -8,7 +8,7 @@
 			<customizations>
 				<customization>
 					<targetPackageRoot>org.alfresco</targetPackageRoot>
-					<sourcePackageRoot>dk.magenta.rm.customize-userprofile.extensions</sourcePackageRoot>
+					<sourcePackageRoot>dk.magenta.rm.customize-userprofile</sourcePackageRoot>
 				</customization>
 			</customizations>
 

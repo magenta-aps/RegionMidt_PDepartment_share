@@ -9,7 +9,6 @@
              alfresco/tomcat/shared/classes/alfresco/web-extension/share-config-custom.xml file
      -->
 <alfresco-config>
-    <client-debug>true</client-debug>
 
     <config evaluator="aspect" condition="emailserver:aliasable">
         <forms>

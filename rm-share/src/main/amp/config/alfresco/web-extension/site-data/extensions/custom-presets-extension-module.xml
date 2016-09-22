@@ -8,7 +8,7 @@
             <customizations>
                 <customization>
                     <targetPackageRoot>org.alfresco</targetPackageRoot>
-                    <sourcePackageRoot>dk.magenta.rm.custom-presets-share.extensions</sourcePackageRoot>
+                    <sourcePackageRoot>dk.magenta.rm.custom-presets</sourcePackageRoot>
                 </customization>
             </customizations>
 
