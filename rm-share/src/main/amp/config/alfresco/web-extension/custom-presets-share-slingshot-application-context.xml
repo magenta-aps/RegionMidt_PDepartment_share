@@ -45,7 +45,8 @@
 
     <!-- Presets manager - configured to walk a search path for preset definition files -->
     <bean id="webscript.dk.magenta.rm.layoutmanager.get" class="dk.magenta.rm.LayoutManager" parent="webscript">
-
+        <property name="connectorService" ref="connector.service" />
+        <property name="scriptRemote" ref="webframework.webscripts.scriptremote" />
     </bean>
 
 </beans>

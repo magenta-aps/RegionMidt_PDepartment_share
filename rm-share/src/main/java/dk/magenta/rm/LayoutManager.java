@@ -4,99 +4,80 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.extensions.surf.exception.ConnectorServiceException;
-import org.springframework.extensions.webscripts.DeclarativeWebScript;
+import org.springframework.extensions.webscripts.*;
 
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
 
 
-import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
-import org.springframework.extensions.webscripts.Status;
-import org.springframework.extensions.webscripts.WebScriptException;
-import org.springframework.extensions.webscripts.WebScriptRequest;
 
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import java.io.IOException;
-import java.io.Writer;
-
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+
+
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.XMLOutputter;
+
+import org.jdom2.*;
+import org.springframework.extensions.webscripts.connector.ConnectorService;
+import org.springframework.extensions.webscripts.connector.Response;
 
 /**
  * Created by flemmingheidepedersen on 20/09/2016.
  */
 public class LayoutManager extends DeclarativeWebScript {
 
-    protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
+    private ScriptRemote scriptRemote;
+    public void setScriptRemote(ScriptRemote scriptRemote) {
+        this.scriptRemote = scriptRemote;
+    }
 
-        // Set up return model
-        Map<String, Object> model = new HashMap<>();
-
-//        System.out.println("hej1");
-
-//        this.test();
+    private ConnectorService connectorService;
+    public void setConnectorService(ConnectorService connectorService) {
+        this.connectorService = connectorService;
+    }
 
 
-        // setup http call to content webscript
-        String url = "http://localhost:8081/share/service/cmm/model-service/modela/nummer3";
+
+    private ArrayList<String> getColumnsForCustomType(String type, String host) {
+
+        System.out.println(type);
+
+        String url = host  + "/share/service/cmm/model-service/"  + type;
         GetMethod getContent = new GetMethod(url);
         HttpClient client = new HttpClient();
         getContent.setDoAuthentication(true);
 
+        ArrayList<String> result = new ArrayList();
+
 
         try
         {
-            // execute the method
             client.executeMethod(getContent);
-
-            // render the content returned
 
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(getContent.getResponseBodyAsString());
 
             JSONObject json = (JSONObject) obj;
 
-            System.out.println(json);
-
-
-
             JSONArray form = (JSONArray) json.get("form");
             JSONObject elementconfig = (JSONObject)form.get(0);
             JSONArray columns = (JSONArray)elementconfig.get("column");
 
-            System.out.println("array: ");
-
-
-
-
             Iterator iterator = columns.iterator();
 
             while (iterator.hasNext()) {
-
                 JSONObject elementConfig = (JSONObject)iterator.next();
-
-                System.out.println(elementConfig.get("id"));
+                result.add((String) elementConfig.get("id"));
             }
 
-//
-//
-//            JSONObject jsonObject = new JSONObject(s);
-//
-//            System.out.println(jsonObject.get(""));
 
-
-
-
-
-
-
-
-
-//            System.out.println(getContent.getResponseBodyAsString());
         }
         catch (Exception e)
         {
@@ -104,14 +85,206 @@ public class LayoutManager extends DeclarativeWebScript {
             getContent.releaseConnection();
 
         }
+        return result;
+    }
+
+    public Element createXML(ArrayList<String> properties, String type) {
+
+        String condition = (String)properties.get(0).split(":")[0] + ":" + type;
+
+        Element config = new Element("config");
+        config.setAttribute("evaluator", "model-type");
+        config.setAttribute("condition", condition);
+        config.setAttribute("id", "custom_form_setup");
+
+        Element forms = new Element("forms");
+
+        Element form = new Element("form");
+
+        Element field_visibility = new Element("field-visibility");
+        Element create_form  = new Element("create-form");
+        Element appearance  = new Element("appearance");
+
+        create_form.setAttribute("template", "../data-lists/forms/dataitem.ftl");
+
+        Iterator iterator = properties.iterator();
 
 
-        model.put("hej", "The Layout of all custom datalists has been reloaded ");
+        while (iterator.hasNext()) {
+            Element property = new Element("show");
+            String property_value = (String) iterator.next();
+            property.setAttribute("id", property_value);
+            field_visibility.addContent(property);
+        }
 
-        return model;
+        form.addContent(field_visibility);
+        form.addContent(create_form);
+        form.addContent(appearance);
+        forms.addContent(form);
+        config.addContent(forms);
+
+        return config;
     }
 
 
 
+    public void addToShareConfigCustom(ArrayList<Element> xmlList) {
+
+        Document d = new Document();
+
+        String workingDir = System.getProperty("user.dir");
+
+        String path = workingDir + "/target/test-classes/alfresco/web-extension/share-config-custom.xml";
+
+        try{
+
+            Document document = null;
+            Element root = null;
+            File xmlFile = new File(path);
+
+            if(xmlFile.exists()){
+
+                FileInputStream fis = new FileInputStream(xmlFile);
+                SAXBuilder sb = new SAXBuilder();
+                document = sb.build(fis);
+                root = document.getRootElement();
+                fis.close();
+            }else{
+                document = new Document();
+                root = new Element("banque");
+            }
+
+
+            root = this.removeLayouts(root, "custom_form_setup");
+
+            Iterator i = xmlList.iterator();
+            while (i.hasNext()) {
+
+                Element xml = (Element)i.next();
+                root.addContent(xml);
+            }
+
+            document.setContent(root);
+
+            FileWriter writer = new FileWriter(path);
+            XMLOutputter outputter = new XMLOutputter();
+            outputter.output(document, writer);
+            outputter.output(document, System.out);
+            writer.close(); // close writer
+
+        } catch (IOException io) {
+            System.out.println(io.getMessage());
+        } catch (JDOMException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Element removeLayouts(Element root, String layoutID) {
+
+        List<Element> children = root.getChildren();
+
+        Iterator i = children.iterator();
+
+        ArrayList childrenToRemove = new ArrayList();
+
+        while (i.hasNext()) {
+            Element e = (Element)i.next();
+
+            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
+                System.out.println(e.getAttributeValue("id"));
+            }
+
+            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals(layoutID)) {
+                // cant mess with the iterator at this point, so we have to pick it up to be removed after the iterator has finished
+                childrenToRemove.add(e.getName());
+            }
+        }
+
+        i = childrenToRemove.iterator();
+        while (i.hasNext()) {
+            root.removeChild((String)i.next());
+        }
+
+        return root;
+
+    }
+
+    private ArrayList<String> getCustomTypes() {
+
+        String alfrescoEndPoint = null;
+        try {
+            alfrescoEndPoint = connectorService.getConnector("alfresco").getEndpoint();
+        } catch (ConnectorServiceException e) {
+            e.printStackTrace();
+        }
+
+        String uri = alfrescoEndPoint + "/layoutmanager";
+        Response response = scriptRemote.connect().get(uri);
+
+        System.out.println(response.getText());
+
+        ArrayList<String> result = new ArrayList();
+
+
+        try {
+
+
+            JSONParser parser = new JSONParser();
+            Object obj = parser.parse(response.getText());
+
+            JSONArray list = (JSONArray) obj;
+
+            Iterator iterator = list.iterator();
+
+            while (iterator.hasNext()) {
+                JSONObject elementConfig = (JSONObject)iterator.next();
+
+                // TODO make the rm.dk a constant
+                result.add(((String)elementConfig.get("model")).replace("{rm.dk}","") + "/" + ((String)elementConfig.get("type")).replace("{rm.dk}", ""));
+
+            }
+
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+
+        }
+
+        return result;
+    }
+
+    protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
+
+        Map<String, Object> model = new HashMap<>();
+
+        ArrayList<String> customTypes = this.getCustomTypes();
+
+        ArrayList<Element> xmlList = new ArrayList();
+
+        Iterator i = customTypes.iterator();
+
+        while (i.hasNext()) {
+            String type = (String)i.next();
+
+            ArrayList<String> properties = this.getColumnsForCustomType(type, req.getServerPath());
+
+            Element xml = this.createXML(properties, type.split("/")[1]);
+            xmlList.add(xml);
+
+        }
+
+
+
+        model.put("hej", "The Layout of all custom datalists has been reloaded ");
+
+        this.addToShareConfigCustom(xmlList);
+
+        System.out.println("url: " + req.getURL());
+        System.out.println("url: " + req.getServerPath());
+
+        return model;
+    }
 
 }

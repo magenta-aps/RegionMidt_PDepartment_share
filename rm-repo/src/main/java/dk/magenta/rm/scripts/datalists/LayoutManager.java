@@ -30,6 +30,9 @@ import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.namespace.QName;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.extensions.webscripts.*;
 
 import org.alfresco.service.cmr.search.SearchService;
@@ -47,7 +50,7 @@ import java.util.*;
 
 import org.jdom2.*;
 
-public class LayoutManager extends DeclarativeWebScript {
+public class LayoutManager extends AbstractWebScript {
 
 
     private NodeService nodeService;
@@ -67,89 +70,7 @@ public class LayoutManager extends DeclarativeWebScript {
     }
 
 
-
-
-    public void test() {
-
-
-
-//   Læs layoutstruktur fra datalisten
-//   Lav xml struktur for layout
-
-
-
-
-//   indsæt xml struktur i share-config-custom
-//  indsæt mellem <alfresco-config>
-        // gem fil
-        // bed brugeren om at genstarte share - det træder i kraft efter genstart af share
-
-        Document d = new Document();
-
-
-//        try {
-//            Scanner in = new Scanner(new FileReader("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/test-classes/alfresco/web-extension/share-config-custom.xml"));
-//
-//            while (in.hasNext()) {
-//                System.out.println(in.next());
-//            }
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
-
-
-        try{
-
-            Document document = null;
-            Element root = null;
-            File xmlFile = new File("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/share-war/WEB-INF/classes/alfresco/web-extension/share-config-custom.xml");
-
-            if(xmlFile.exists()){
-
-                FileInputStream fis = new FileInputStream(xmlFile);
-                SAXBuilder sb = new SAXBuilder();
-                document = sb.build(fis);
-                root = document.getRootElement();
-                fis.close();
-            }else{
-                document = new Document();
-                root = new Element("banque");
-            }
-
-
-            root = this.removeLayouts(root, "ffsd");
-
-//            Element compte = new Element("config");
-//            compte.setAttribute(new Attribute("idCompte", "ffsd"));
-
-
-//            compte.addContent(new Element("numCompte").setText(this.idCompte));
-//            compte.addContent(new Element("nom").setText(this.nom));
-//            compte.addContent(new Element("solde").setText(this.solde));
-//
-//            root.addContent(compte);
-            document.setContent(root);
-
-            FileWriter writer = new FileWriter("/Users/flemmingheidepedersen/src/OpenDESK-REPO/share/target/share-war/WEB-INF/classes/alfresco/web-extension/share-config-custom.xml");
-            XMLOutputter outputter = new XMLOutputter();
-            outputter.output(document, writer);
-            outputter.output(document, System.out);
-            writer.close(); // close writer
-
-        } catch (IOException io) {
-            System.out.println(io.getMessage());
-        } catch (JDOMException e) {
-            e.printStackTrace();
-        }
-
-
-
-
-    }
-
-     private void getCustomLayouts() {
+     private org.json.simple.JSONArray getCustomTypes() {
 
 
          String OD_URI = "http://www.test.com/model/regionmidt/1.0";
@@ -162,118 +83,69 @@ public class LayoutManager extends DeclarativeWebScript {
          Collection<QName> c = dictionaryService.getSubTypes(TYPE_DATALISTS, true);
          TypeDefinition t = dictionaryService.getType(TYPE_MODELLA);
 
-         System.out.println(t.getModel().getName().getLocalName());
-
-
-//         System.out.println(t);
-
-         Iterator i = c.iterator();
-
-         // du får namespace ud for modellen ( du skal kun bruge model navnet)  dette giver dig navnet:   System.out.println(t.getModel().getName().getLocalName());
-         // og du får navnet på typen ud (den er god nok)
-
-//         while (i.hasNext()) {
-//             System.out.println(i.next());
-//         }
-
-//         ModelDefinition modella = dictionaryService.getModel(TYPE_MODELLA);
 
          PagingResults<CustomModelDefinition> modelDefinitionPagingResults = customModelService.getCustomModels(new PagingRequest(100));
 
          Iterator it = modelDefinitionPagingResults.getPage().iterator();
 
-//         while (it.hasNext()) {
-//
-//             CustomModelDefinition cmd = (CustomModelDefinition)it.next();
-//
-//             System.out.println(cmd.getName());
-//         }
+         while (it.hasNext()) {
 
-
-         CustomModelDefinition cs = customModelService.getCustomModel("navnet");
-         System.out.println("hej");
-
-         Collection<TypeDefinition> typeDefinitions = cs.getTypeDefinitions();
-
-         Iterator typeDeI = typeDefinitions.iterator();
-
-         while (typeDeI.hasNext()) {
-
-             TypeDefinition typeDefinition = (TypeDefinition)typeDeI.next();
-
+             CustomModelDefinition cmd = (CustomModelDefinition)it.next();
 
          }
 
 
 
-//        // hent alle layouts som nedarver fra vores custom - som er blevet lavet i modellen
-
-    // for hver af dem, hent deres layout og transform det til xml - til brug i share-config-custom
 
 
+         PagingResults<TypeDefinition> customModelServiceAllCustomTypes = customModelService.getAllCustomTypes(new PagingRequest(100));
+
+         org.json.simple.JSONArray result = new org.json.simple.JSONArray();
+
+
+         it = customModelServiceAllCustomTypes.getPage().iterator();
+
+         while (it.hasNext()) {
+
+             JSONObject model = new JSONObject();
+             TypeDefinition cmd = (TypeDefinition)it.next();
+
+//             System.out.println("Navn på typen: " + cmd.getName());
+//             System.out.println("Navn på modellen" + cmd.getModel().getName());
+//             System.out.println("properties" + cmd.getProperties());
+
+             try {
+                 model.put("model", cmd.getModel().getName() );
+                 model.put("type", cmd.getName());
+
+                 result.add(model);
+
+             } catch (JSONException e) {
+                 e.printStackTrace();
+             }
+
+
+         }
+
+         return result;
     }
-//
-//    private void transformLayoutToXML(String layout) {
-//
-//    }
-//
-//
-//    private void addCustomLayouts(String allCustomLayouts) {
-//
-//    }
-
-
-    private Element removeLayouts(Element root, String layoutID) {
-
-        List<Element> children = root.getChildren();
-
-        Iterator i = children.iterator();
-
-        ArrayList childrenToRemove = new ArrayList();
-
-        while (i.hasNext()) {
-            Element e = (Element)i.next();
-
-            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
-                System.out.println(e.getAttributeValue("id"));
-            }
-
-            if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals(layoutID)) {
-                // cant mess with the iterator at this point, so we have to pick it up to be removed after the iterator has finished
-                childrenToRemove.add(e.getName());
-            }
-        }
-
-        i = childrenToRemove.iterator();
-        while (i.hasNext()) {
-            root.removeChild((String)i.next());
-        }
-
-        return root;
-
-    }
-
 
 
     @Override
-    protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
+    public void execute(WebScriptRequest webScriptRequest, WebScriptResponse webScriptResponse) throws IOException {
 
-        // Set up return model
         Map<String, Object> model = new HashMap<>();
 
-//        System.out.println("hej1");
-
-//        this.test();
-
-        this.getCustomLayouts();
+        org.json.simple.JSONArray result = this.getCustomTypes();
 
         model.put("hej", "The Layout of all custom datalists has been reloaded ");
 
-        return model;
+        try {
+            result.writeJSONString(webScriptResponse.getWriter());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
 }
-
-// TODO: hent layout for hver custom type
-// omformningskode til xml
