@@ -1,4 +1,4 @@
-<import resource="classpath:/alfresco/site-webscripts/org/alfresco/share/header/share-header.get.js">
+<import resource="classpath:/alfresco/site-webscripts/org/alfresco/share/imports/share-header.lib.js">
 
 var siteDropDown = widgetUtils.findObject(model.jsonModel, "id", "HEADER_SITE_CONFIGURATION_DROPDOWN");
 
@@ -8,7 +8,7 @@ if (siteDropDown == null) {
     var siteData = getSiteData();
     if (siteData != null) {
         if (user.isAdmin) {
-            model.jsonModel.services.push("js/custom-presets-share/PresetService");
+            model.jsonModel.services.push("js/custom-presets/PresetService");
             // If the user is an admin then let them generate a preset from the site
             siteDropDown.config.widgets.push({
                 id: "HEADER_GENERATE_PRESET",

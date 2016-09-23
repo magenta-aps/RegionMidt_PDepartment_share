@@ -18,7 +18,7 @@
           class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
         <property name="resourceBundles">
             <list>
-                <value>alfresco.web-extension.messages.custom-presets-share</value>
+                <value>alfresco.web-extension.messages.custom-presets</value>
             </list>
         </property>
     </bean>

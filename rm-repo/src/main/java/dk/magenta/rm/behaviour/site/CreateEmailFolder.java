@@ -95,15 +95,27 @@ public class CreateEmailFolder implements NodeServicePolicies.OnCreateNodePolicy
                     transactionService,
                     taggingService);
 
+            // Checks which folders have already been created
+            List<String> existingFolders = new ArrayList<>();
+            List<ChildAssociationRef> folderChildren = nodeService.getChildAssocs(documentLibrary);
+            for (ChildAssociationRef folderChild:folderChildren) {
+                NodeRef child = folderChild.getChildRef();
+                existingFolders.add(nodeService.getProperty(child, PROP_NAME).toString());
+            }
+
+            String folderName = "Inbox";
+            // Only add folder if it does not already exist
+            if(!existingFolders.contains(folderName)) {
                 // Add new folder called "Inbox" as child to the newly created site
                 Map<QName, Serializable> inboxProperties = new HashMap<QName, Serializable>();
-                inboxProperties.put(PROP_NAME, "Inbox");
+                inboxProperties.put(PROP_NAME, folderName);
                 NodeRef inbox = nodeService.createNode(documentLibrary, ASSOC_CONTAINS, QName.createQName("cm:inbox"), TYPE_FOLDER, inboxProperties).getChildRef();
 
                 // Add aspect emailserver:aliasable for folder Inbox
                 Map<QName, Serializable> aspectProperties = new HashMap<QName, Serializable>();
                 aspectProperties.put(EmailServerModel.PROP_ALIAS, siteName);
                 nodeService.addAspect(inbox, EmailServerModel.ASPECT_ALIASABLE, aspectProperties);
+            }
         }
     }
 }
