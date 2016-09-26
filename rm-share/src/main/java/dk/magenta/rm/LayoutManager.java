@@ -47,8 +47,6 @@ public class LayoutManager extends DeclarativeWebScript {
 
     private ArrayList<String> getColumnsForCustomType(String type, String host) {
 
-        System.out.println(type);
-
         String url = host  + "/share/service/cmm/model-service/"  + type;
         GetMethod getContent = new GetMethod(url);
         HttpClient client = new HttpClient();
@@ -191,7 +189,6 @@ public class LayoutManager extends DeclarativeWebScript {
             Element e = (Element)i.next();
 
             if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals("MagentaDataList")) {
-                System.out.println(e.getAttributeValue("id"));
             }
 
             if ((e.getAttributeValue("id") != null ) && e.getAttributeValue("id").equals(layoutID)) {
@@ -221,7 +218,6 @@ public class LayoutManager extends DeclarativeWebScript {
         String uri = alfrescoEndPoint + "/layoutmanager";
         Response response = scriptRemote.connect().get(uri);
 
-        System.out.println(response.getText());
 
         ArrayList<String> result = new ArrayList();
 
@@ -238,22 +234,18 @@ public class LayoutManager extends DeclarativeWebScript {
 
             while (iterator.hasNext()) {
                 JSONObject elementConfig = (JSONObject)iterator.next();
-
-                // TODO make the rm.dk a constant
-                result.add(((String)elementConfig.get("model")).replace("{rm.dk}","") + "/" + ((String)elementConfig.get("type")).replace("{rm.dk}", ""));
-
+                result.add(((String)elementConfig.get("model")).replaceAll("\\{.*\\}", "") + "/" + ((String)elementConfig.get("type")).replaceAll("\\{.*\\}", ""));
             }
-
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
 
         }
-
         return result;
     }
+
+
 
     protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
 
@@ -266,6 +258,7 @@ public class LayoutManager extends DeclarativeWebScript {
         Iterator i = customTypes.iterator();
 
         while (i.hasNext()) {
+
             String type = (String)i.next();
 
             ArrayList<String> properties = this.getColumnsForCustomType(type, req.getServerPath());
@@ -280,9 +273,6 @@ public class LayoutManager extends DeclarativeWebScript {
         model.put("hej", "The Layout of all custom datalists has been reloaded ");
 
         this.addToShareConfigCustom(xmlList);
-
-        System.out.println("url: " + req.getURL());
-        System.out.println("url: " + req.getServerPath());
 
         return model;
     }
