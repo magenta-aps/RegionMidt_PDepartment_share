@@ -72,18 +72,6 @@ public class LayoutManager extends AbstractWebScript {
 
      private org.json.simple.JSONArray getCustomTypes() {
 
-
-         String OD_URI = "http://www.test.com/model/regionmidt/1.0";
-         String OD_MDL = "modela.concarde.dk";
-         String OD_PREFIX = "rm";
-
-         QName TYPE_DATALISTS = QName.createQName(OD_URI, "datalistmodel");
-         QName TYPE_MODELLA = QName.createQName(OD_MDL, "nummer3");
-
-         Collection<QName> c = dictionaryService.getSubTypes(TYPE_DATALISTS, true);
-         TypeDefinition t = dictionaryService.getType(TYPE_MODELLA);
-
-
          PagingResults<CustomModelDefinition> modelDefinitionPagingResults = customModelService.getCustomModels(new PagingRequest(100));
 
          Iterator it = modelDefinitionPagingResults.getPage().iterator();
@@ -93,10 +81,6 @@ public class LayoutManager extends AbstractWebScript {
              CustomModelDefinition cmd = (CustomModelDefinition)it.next();
 
          }
-
-
-
-
 
          PagingResults<TypeDefinition> customModelServiceAllCustomTypes = customModelService.getAllCustomTypes(new PagingRequest(100));
 
@@ -110,10 +94,6 @@ public class LayoutManager extends AbstractWebScript {
              JSONObject model = new JSONObject();
              TypeDefinition cmd = (TypeDefinition)it.next();
 
-//             System.out.println("Navn på typen: " + cmd.getName());
-//             System.out.println("Navn på modellen" + cmd.getModel().getName());
-//             System.out.println("properties" + cmd.getProperties());
-
              try {
                  model.put("model", cmd.getModel().getName() );
                  model.put("type", cmd.getName());
@@ -123,8 +103,6 @@ public class LayoutManager extends AbstractWebScript {
              } catch (JSONException e) {
                  e.printStackTrace();
              }
-
-
          }
 
          return result;
