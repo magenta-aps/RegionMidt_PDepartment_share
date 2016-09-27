@@ -47,6 +47,11 @@ public class LayoutManager extends DeclarativeWebScript {
 
     private ArrayList<String> getColumnsForCustomType(String type, String host) {
 
+        System.out.println("type");
+        System.out.println(type);
+        System.out.println("host");
+        System.out.println(host);
+
         String url = host  + "/share/service/cmm/model-service/"  + type;
         GetMethod getContent = new GetMethod(url);
         HttpClient client = new HttpClient();
@@ -60,27 +65,40 @@ public class LayoutManager extends DeclarativeWebScript {
             client.executeMethod(getContent);
 
             JSONParser parser = new JSONParser();
+            System.out.println("hej1");
             Object obj = parser.parse(getContent.getResponseBodyAsString());
+
+            System.out.println("hej2");
 
             JSONObject json = (JSONObject) obj;
 
             JSONArray form = (JSONArray) json.get("form");
-            JSONObject elementconfig = (JSONObject)form.get(0);
-            JSONArray columns = (JSONArray)elementconfig.get("column");
 
-            Iterator iterator = columns.iterator();
+            System.out.println("size....");
+            System.out.println(form.size());
 
-            while (iterator.hasNext()) {
-                JSONObject elementConfig = (JSONObject)iterator.next();
-                result.add((String) elementConfig.get("id"));
+            if (form.size() > 0) {
+                JSONObject elementconfig = (JSONObject)form.get(0);
+                JSONArray columns = (JSONArray)elementconfig.get("column");
+
+                Iterator iterator = columns.iterator();
+
+                while (iterator.hasNext()) {
+                    JSONObject elementConfig = (JSONObject)iterator.next();
+                    result.add((String) elementConfig.get("id"));
+                }
             }
-
-
+            else {
+                getContent.releaseConnection();
+                System.out.println("no layout for type");
+                result = null;
+            }
         }
         catch (Exception e)
         {
             e.printStackTrace();
             getContent.releaseConnection();
+            result = null;
 
         }
         return result;
@@ -228,12 +246,16 @@ public class LayoutManager extends DeclarativeWebScript {
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(response.getText());
 
+            System.out.println(obj);
+
             JSONArray list = (JSONArray) obj;
 
             Iterator iterator = list.iterator();
 
             while (iterator.hasNext()) {
                 JSONObject elementConfig = (JSONObject)iterator.next();
+
+
                 result.add(((String)elementConfig.get("model")).replaceAll("\\{.*\\}", "") + "/" + ((String)elementConfig.get("type")).replaceAll("\\{.*\\}", ""));
             }
         }
@@ -249,6 +271,9 @@ public class LayoutManager extends DeclarativeWebScript {
 
     protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
 
+
+        System.out.println(("test"));
+
         Map<String, Object> model = new HashMap<>();
 
         ArrayList<String> customTypes = this.getCustomTypes();
@@ -263,9 +288,15 @@ public class LayoutManager extends DeclarativeWebScript {
 
             ArrayList<String> properties = this.getColumnsForCustomType(type, req.getServerPath());
 
-            Element xml = this.createXML(properties, type.split("/")[1]);
-            xmlList.add(xml);
 
+            System.out.println("properties");
+            System.out.println(properties);
+
+            if (properties != null) {
+                Element xml = this.createXML(properties, type.split("/")[1]);
+                xmlList.add(xml);
+
+            }
         }
 
 
