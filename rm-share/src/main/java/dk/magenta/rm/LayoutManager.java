@@ -65,17 +65,11 @@ public class LayoutManager extends DeclarativeWebScript {
             client.executeMethod(getContent);
 
             JSONParser parser = new JSONParser();
-            System.out.println("hej1");
             Object obj = parser.parse(getContent.getResponseBodyAsString());
-
-            System.out.println("hej2");
 
             JSONObject json = (JSONObject) obj;
 
             JSONArray form = (JSONArray) json.get("form");
-
-            System.out.println("size....");
-            System.out.println(form.size());
 
             if (form.size() > 0) {
                 JSONObject elementconfig = (JSONObject)form.get(0);
@@ -98,6 +92,7 @@ public class LayoutManager extends DeclarativeWebScript {
         {
             e.printStackTrace();
             getContent.releaseConnection();
+            System.out.println("no layout for type");
             result = null;
 
         }
