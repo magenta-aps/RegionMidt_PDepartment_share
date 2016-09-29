@@ -13,6 +13,8 @@
              placed in the tomcat/shared/classes/alfresco/web-extension/custom-slingshot-application-context.xml file
     -->
 
+
+
     <!-- Add module specific messages and labels -->
     <bean id="custom-presets-share.resources"
           class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
@@ -43,10 +45,25 @@
         </property>
     </bean>
 
+
+    <bean id="CustomCMMService" class="dk.magenta.rm.CustomCMMService" parent="webscript.org.alfresco.cmm.components.cmm-service.get">
+
+    </bean>
+
     <!-- Presets manager - configured to walk a search path for preset definition files -->
     <bean id="webscript.dk.magenta.rm.layoutmanager.get" class="dk.magenta.rm.LayoutManager" parent="webscript">
         <property name="connectorService" ref="connector.service" />
         <property name="scriptRemote" ref="webframework.webscripts.scriptremote" />
+        <property name="CustomCMMService" ref="CustomCMMService" />
+
     </bean>
+
+
+
+
+
+
+
+
 
 </beans>
