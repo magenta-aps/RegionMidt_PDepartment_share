@@ -21,6 +21,12 @@
         For more available properties see the alfresco-sdk-parent POM.
        -->
     <properties>
+
+        <alfresco.version>5.1.g</alfresco.version>
+
+        <!--<alfresco.client.war>share</alfresco.client.war>-->
+        <!--<alfresco.client.war.folder>${project.build.directory}/${project.build.finalName}-war</alfresco.client.war.folder>-->
+
         <!-- The following are default values for data location and Alfresco version.
              Uncomment if you need to change
         <alfresco.version>${alfresco.community.default.version}</alfresco.version> -->
@@ -69,6 +75,12 @@
                 <version>2.0.6</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.ecmarchitect</groupId>
+                <artifactId>share-site-creators-share</artifactId>
+                <version>0.0.3</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
@@ -82,9 +94,11 @@
             <classifier>classes</classifier>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.springframework.extensions.surf</groupId>
+            <groupId>org.alfresco.surf</groupId>
             <artifactId>spring-surf-api</artifactId>
+            <version>${dependency.surf.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -104,6 +118,92 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>yuicompressor-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <!--  Here is can control the order of overlay of your (WAR, AMP, etc.) dependencies
+                        | NOTE: At least one WAR dependency must be uncompressed first
+                        | NOTE: In order to have a dependency effectively added to the WAR you need to
+                        | explicitly mention it in the overlay section.
+                        | NOTE: First-win resource strategy is used by the WAR plugin
+                         -->
+
+
+
+                    <overlays>
+                        <!-- Current project customizations -->
+                        <overlay/>
+                        <!-- The Alfresco WAR -->
+                        <overlay>
+                            <groupId>${alfresco.groupId}</groupId>
+                            <artifactId>${alfresco.share.artifactId}</artifactId>
+                            <type>war</type>
+                            <!-- To allow inclusion of META-INF -->
+                            <excludes/>
+                        </overlay>
+
+                        <overlay>
+                            <groupId>${alfresco.groupId}</groupId>
+                            <artifactId>javascript-console-share</artifactId>
+                            <type>amp</type>
+                        </overlay>
+
+
+
+                        <overlay>
+                            <groupId>com.ecmarchitect</groupId>
+                            <artifactId>share-site-creators-share</artifactId>
+                            <type>amp</type>
+                        </overlay>
+
+
+                    </overlays>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>unpack-deps</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+
+                        <executions>
+                            <execution>
+                                <id>unpack-amps</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>unpack-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <includeTypes>amp</includeTypes>
+                                    <outputDirectory>${alfresco.client.war.folder}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.alfresco.maven.plugin</groupId>
+                                <artifactId>maven-amp-plugin</artifactId>
+                                <version>3.0.2</version>
+                            </dependency>
+
+                        </dependencies>
+                    </plugin>
+
+
+
+                </plugins>
+            </build>
+        </profile>
+
+
+
+
+    </profiles>
 </project>
