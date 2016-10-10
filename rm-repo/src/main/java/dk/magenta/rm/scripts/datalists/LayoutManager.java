@@ -22,33 +22,17 @@ import org.alfresco.query.PagingRequest;
 import org.alfresco.query.PagingResults;
 import org.alfresco.service.cmr.dictionary.*;
 import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.cmr.repository.StoreRef;
-import org.alfresco.service.cmr.search.QueryConsistency;
-import org.alfresco.service.cmr.search.ResultSet;
-import org.alfresco.service.cmr.search.SearchParameters;
-import org.alfresco.service.cmr.security.PersonService;
-import org.alfresco.service.namespace.QName;
-import org.jdom2.input.SAXBuilder;
-import org.jdom2.output.XMLOutputter;
-import org.json.JSONArray;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.extensions.webscripts.*;
 
-import org.alfresco.service.cmr.search.SearchService;
-
-import org.alfresco.service.cmr.dictionary.CustomModelService;
 import org.alfresco.repo.dictionary.CustomModelServiceImpl;
 
 import java.io.*;
-import java.lang.reflect.Type;
+
 import java.util.*;
 
-
-
-
-
-import org.jdom2.*;
 
 public class LayoutManager extends AbstractWebScript {
 

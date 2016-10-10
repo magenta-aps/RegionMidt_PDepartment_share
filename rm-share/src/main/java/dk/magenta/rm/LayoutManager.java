@@ -174,7 +174,7 @@ public class LayoutManager extends DeclarativeWebScript {
             XMLOutputter outputter = new XMLOutputter();
             outputter.output(document, writer);
             outputter.output(document, System.out);
-            writer.close(); // close writer
+            writer.close();
 
         } catch (IOException io) {
             System.out.println(io.getMessage());

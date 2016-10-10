@@ -22,7 +22,6 @@ public class LayoutManager extends DeclarativeWebScript {
     @Override
     protected Map<String, Object> executeImpl(WebScriptRequest req, Status status, Cache cache) {
 
-        System.out.println("hej");
 
         //Get children of extension preset folder
         List<NodeRef> presetExtensionNodes = NodeExt.getPresetXMLFiles();
