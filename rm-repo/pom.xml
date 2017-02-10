@@ -79,9 +79,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ecmarchitect</groupId>
-            <artifactId>share-site-creators-repo</artifactId>
-            <version>0.0.3</version>
+			<groupId>com.metaversant</groupId>
+			<artifactId>share-site-creators-repo</artifactId>
+			<version>0.0.5</version>
             <type>amp</type>
         </dependency>
 

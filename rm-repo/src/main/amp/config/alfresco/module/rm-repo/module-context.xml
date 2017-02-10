@@ -23,11 +23,7 @@
 				Otherwise your custom models are not yet loaded when your service beans are instantiated and you
 				cannot for example register policies on them. -->
 	<import resource="classpath:alfresco/module/email-inbox-on-site-creation-repo/context/service-context.xml" />
-
-	<!-- Important that custom presets repo is after other modules changing behavior of onCreateNode -->
 	<import resource="classpath:alfresco/module/rm-repo/context/bootstrap-context.xml" />
-	<import resource="classpath:alfresco/module/custom-presets-repo/context/webscript-context.xml" />
-	<import resource="classpath:alfresco/module/custom-presets-repo/context/service-context.xml" />
 	<import resource="classpath:alfresco/module/rm-repo/context/webscript-context.xml" />
 
 </beans>

@@ -1,7 +1,0 @@
-<webscript>
-    <shortname>Get Custom Presets Webscript</shortname>
-    <description>Gets all custom presets</description>
-    <url>/custom-presets-repo/presets</url>
-    <authentication>admin</authentication>
-    <format default="xml"></format>
-</webscript>
