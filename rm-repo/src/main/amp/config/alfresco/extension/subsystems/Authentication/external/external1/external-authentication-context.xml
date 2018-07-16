@@ -69,6 +69,7 @@
     </bean>
 
     <!-- Enable control over mapping between request and user ID -->
+    <!-- DefaultRemoteUserMapper Overridden by custom DefaultRemoteUserMapperWithNoDisabledUsers -->
     <bean id="remoteUserMapper" class="dk.magenta.DefaultRemoteUserMapperWithNoDisabledUsers">
         <property name="proxyUserName">
             <value>${external.authentication.proxyUserName}</value>
@@ -85,28 +86,6 @@
         <property name="personService">
             <ref bean="PersonService" />
         </property>
-
-        <!-- BEGIN MODIFICATION -->
-        <property name="authenticationDao">
-            <ref bean="authenticationDao" />
-        </property>
-        <!-- END MODIFICATION -->
     </bean>
-
-    <!-- BEGIN MODIFICATION -->
-    <bean id="authenticationDao" class="org.alfresco.repo.security.authentication.RepositoryAuthenticationDao">
-        <property name="nodeService" ref="nodeService" />
-        <property name="authorityService" ref="authorityService" />
-        <property name="tenantService" ref="tenantService" />
-        <property name="namespaceService" ref="namespaceService" />
-        <property name="compositePasswordEncoder" ref="compositePasswordEncoder" />
-        <property name="policyComponent" ref="policyComponent" />
-        <property name="authenticationCache" ref="authenticationCache" />
-        <property name="singletonCache" ref="immutableSingletonCache"/>
-        <property name="transactionService">
-            <ref bean="transactionService" />
-        </property>
-    </bean>
-    <!-- END MODIFICATION -->
 
 </beans>
