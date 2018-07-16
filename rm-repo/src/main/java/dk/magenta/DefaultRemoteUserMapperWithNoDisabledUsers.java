@@ -1,5 +1,6 @@
 package dk.magenta;
 
+import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.repo.security.authentication.external.DefaultRemoteUserMapper;
 import org.alfresco.service.cmr.security.PersonService;
 import org.apache.commons.logging.Log;
@@ -23,6 +24,7 @@ public class DefaultRemoteUserMapperWithNoDisabledUsers extends DefaultRemoteUse
     @Override
     public String getRemoteUser(HttpServletRequest request) {
 
+        super.setPersonService(personService);
         String remoteUser = super.getRemoteUser(request);
 
         if (remoteUser == null) {
@@ -32,8 +34,7 @@ public class DefaultRemoteUserMapperWithNoDisabledUsers extends DefaultRemoteUse
 
         // Don't allow disabled users to login.
         if (isUserEnabled(remoteUser)) {
-            logger.debug("UserName was set to " + remoteUser + ".");
-            logger.warn("A disabled user (" + remoteUser + ") has tried to log on.");
+            logger.debug("A user (" + remoteUser + ") has successfully logged on.");
             return remoteUser;
         }
         else {
@@ -48,17 +49,21 @@ public class DefaultRemoteUserMapperWithNoDisabledUsers extends DefaultRemoteUse
             return false;
         }
 
-        // Return true if the person exists and is enabled.
-        if(!personService.personExists(userName))
-        {
-            logger.warn("A non-existent user (" + userName + ") tried to log on.");
-            return false;
-        }
-        else if(!personService.isEnabled(userName))
-        {
-            logger.warn("A disabled user (" + userName + ") has tried to log on.");
-            return false;
-        }
-        else return true;
+        return AuthenticationUtil.runAs(new AuthenticationUtil.RunAsWork<Boolean>() {
+            public Boolean doWork() {
+                // Return true if the person exists and is enabled.
+                if(!personService.personExists(userName))
+                {
+                    logger.warn("A non-existent user (" + userName + ") tried to log on.");
+                    return false;
+                }
+                else if(!personService.isEnabled(userName))
+                {
+                    logger.warn("A disabled user (" + userName + ") has tried to log on.");
+                    return false;
+                }
+                else return true;
+            }
+        }, AuthenticationUtil.getSystemUserName());
     }
 }
