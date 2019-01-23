@@ -22,7 +22,7 @@
        -->
     <properties>
 
-        <alfresco.version>5.1.g</alfresco.version>
+        <alfresco.version>5.2.f</alfresco.version>
 
         <!--<alfresco.client.war>share</alfresco.client.war>-->
         <!--<alfresco.client.war.folder>${project.build.directory}/${project.build.finalName}-war</alfresco.client.war.folder>-->
