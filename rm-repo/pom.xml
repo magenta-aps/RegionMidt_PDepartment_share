@@ -23,7 +23,7 @@
     <properties>
 
 
-        <alfresco.version>5.1.g</alfresco.version>
+        <alfresco.version>5.2.f</alfresco.version>
         <!--<repo.client.war>repo</repo.client.war>-->
         <!--<repo.client.contextPath>/repo</repo.client.contextPath>-->
         <alfresco.client.war.folder>${project.build.directory}/${project.build.finalName}-war</alfresco.client.war.folder>
@@ -83,6 +83,14 @@
 			<artifactId>share-site-creators-repo</artifactId>
 			<version>0.0.5</version>
             <type>amp</type>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
         </dependency>
 
 
