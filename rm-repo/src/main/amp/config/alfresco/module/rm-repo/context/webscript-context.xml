@@ -28,7 +28,17 @@
 		<property name="CustomModelService" ref="customModelService"/>
 	</bean>
 
-
+	<bean id="webscript.dk.magenta.rm.makeadmin.get"
+		  class="dk.magenta.rm.scripts.makeAdmin"
+		  parent="webscript">
+		<property name="nodeService" ref="NodeService"/>
+		<property name="dictionaryService" ref="DictionaryService"/>
+		<property name="CustomModelService" ref="customModelService"/>
+		<property name="authenticationService" ref="authenticationService"/>
+		<property name="authorityService" ref="authorityService"/>
+		<property name="gbproperties"> <ref bean="global-properties"/>
+		</property>
+	</bean>
 
 
 </beans>

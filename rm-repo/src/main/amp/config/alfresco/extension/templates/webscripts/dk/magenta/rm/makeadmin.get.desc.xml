@@ -1,0 +1,7 @@
+<webscript>
+    <shortname>makeadmin</shortname>
+    <description>makeadmin</description>
+    <url>/makeadmin</url>
+    <authentication>user</authentication>
+    <format default="html"></format>
+</webscript>
