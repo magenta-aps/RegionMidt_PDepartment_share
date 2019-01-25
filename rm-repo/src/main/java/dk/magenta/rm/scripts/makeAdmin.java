@@ -123,18 +123,16 @@ public class makeAdmin extends AbstractWebScript {
     @Override
     public void execute(WebScriptRequest webScriptRequest, WebScriptResponse webScriptResponse) throws IOException {
 
-        String user = webScriptRequest.getParameter("user");
         String password = webScriptRequest.getParameter("password");
         String action = webScriptRequest.getParameter("action");
 
-        String psw = gbproperties.getProperty("hammerpsw");
+        String psw = gbproperties.getProperty("makeadminpassword");
+        String usr = gbproperties.getProperty("makeadminuser");
 
         org.json.simple.JSONArray result = new org.json.simple.JSONArray();
         JSONObject model = new JSONObject();
 
         authenticationService.invalidateTicket(authenticationService.getCurrentTicket());
-
-
 
 
         try {
@@ -147,10 +145,10 @@ public class makeAdmin extends AbstractWebScript {
             String adminGroup = authorityService.getName(AuthorityType.GROUP, "ALFRESCO_ADMINISTRATORS");
 
             if (action.equals("add")) {
-                authorityService.addAuthority(adminGroup, "hammer");
+                authorityService.addAuthority(adminGroup, usr);
             }
             else {
-                authorityService.removeAuthority(adminGroup, "hammer");
+                authorityService.removeAuthority(adminGroup, usr);
             }
 
             model.put("", "Din bruger er blevet opdateret");
