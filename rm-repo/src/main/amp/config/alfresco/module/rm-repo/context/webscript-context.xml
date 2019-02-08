@@ -37,6 +37,7 @@
 		<property name="authenticationService" ref="authenticationService"/>
 		<property name="authorityService" ref="authorityService"/>
 		<property name="gbproperties"> <ref bean="global-properties"/>
+		<property name="serviceRegistry"> <ref bean="serviceRegistry"/>
 		</property>
 	</bean>
 
