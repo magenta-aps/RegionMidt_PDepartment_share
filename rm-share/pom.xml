@@ -102,6 +102,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.redpill-linpro.alfresco.statistics</groupId>
+            <artifactId>alfresco-system-usage-statistics-share</artifactId>
+            <version>1.1.4</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.jdom/jdom2 -->
         <dependency>
             <groupId>org.jdom</groupId>

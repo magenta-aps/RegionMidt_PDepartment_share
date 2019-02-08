@@ -23,6 +23,7 @@ import org.alfresco.query.PagingResults;
 import org.alfresco.repo.dictionary.CustomModelServiceImpl;
 import org.alfresco.repo.security.authentication.AuthenticationException;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
+import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.dictionary.*;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AuthenticationService;
@@ -34,6 +35,10 @@ import org.json.JSONObject;
 import org.json.simple.JSONArray;
 import org.springframework.extensions.webscripts.*;
 
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,6 +59,15 @@ public class makeAdmin extends AbstractWebScript {
 
     private PersonService personService;
 
+    public ServiceRegistry getServiceRegistry() {
+        return serviceRegistry;
+    }
+
+    public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+        this.serviceRegistry = serviceRegistry;
+    }
+
+    ServiceRegistry serviceRegistry;
 
 
     private Properties gbproperties;
@@ -76,107 +90,85 @@ public class makeAdmin extends AbstractWebScript {
         this.dictionaryService = dictionaryService;
     }
 
-    public void setCustomModelService(CustomModelServiceImpl customModelService) {
-        this.customModelService = customModelService;
-    }
 
 
-     private org.json.simple.JSONArray getCustomTypes() {
-
-         PagingResults<CustomModelDefinition> modelDefinitionPagingResults = customModelService.getCustomModels(new PagingRequest(100));
-
-         Iterator it = modelDefinitionPagingResults.getPage().iterator();
-
-         while (it.hasNext()) {
-
-             CustomModelDefinition cmd = (CustomModelDefinition)it.next();
-
-         }
-
-         PagingResults<TypeDefinition> customModelServiceAllCustomTypes = customModelService.getAllCustomTypes(new PagingRequest(100));
-
-         org.json.simple.JSONArray result = new org.json.simple.JSONArray();
 
 
-         it = customModelServiceAllCustomTypes.getPage().iterator();
-
-         while (it.hasNext()) {
-
-             JSONObject model = new JSONObject();
-             TypeDefinition cmd = (TypeDefinition)it.next();
-
-             try {
-                 model.put("model", cmd.getModel().getName());
-                 model.put("type", cmd.getName());
-
-                 result.add(model);
-
-             } catch (JSONException e) {
-                 e.printStackTrace();
-             }
-         }
-
-         return result;
-    }
 
 
     @Override
     public void execute(WebScriptRequest webScriptRequest, WebScriptResponse webScriptResponse) throws IOException {
 
-        String password = webScriptRequest.getParameter("password");
-        String action = webScriptRequest.getParameter("action");
+        UserTransaction tx = null;
+        try
+        {
+            tx = serviceRegistry.getTransactionService().getUserTransaction(false);
+            tx.begin();
+            String password = webScriptRequest.getParameter("password");
+            String action = webScriptRequest.getParameter("action");
 
-        String psw = gbproperties.getProperty("makeadminpassword");
-        String usr = gbproperties.getProperty("makeadminuser");
+            String psw = gbproperties.getProperty("makeadminpassword");
+            String usr = gbproperties.getProperty("makeadminuser");
 
-        org.json.simple.JSONArray result = new org.json.simple.JSONArray();
-        JSONObject model = new JSONObject();
+            org.json.simple.JSONArray result = new org.json.simple.JSONArray();
+            JSONObject model = new JSONObject();
 
-        authenticationService.invalidateTicket(authenticationService.getCurrentTicket());
+            authenticationService.invalidateTicket(authenticationService.getCurrentTicket());
 
 
-        try {
-        if (password.equals(psw)) {
+            try {
+                if (password.equals(psw)) {
 
-            //authenticationService.authenticate(user, password.toCharArray());
+                    //authenticationService.authenticate(user, password.toCharArray());
 
-            AuthenticationUtil.setAdminUserAsFullyAuthenticatedUser();
+                    AuthenticationUtil.setAdminUserAsFullyAuthenticatedUser();
 
-            String adminGroup = authorityService.getName(AuthorityType.GROUP, "ALFRESCO_ADMINISTRATORS");
+                    String adminGroup = authorityService.getName(AuthorityType.GROUP, "ALFRESCO_ADMINISTRATORS");
 
-            if (action.equals("add")) {
-                authorityService.addAuthority(adminGroup, usr);
+                    if (action.equals("add")) {
+                        authorityService.addAuthority(adminGroup, usr);
+                    }
+                    else {
+                        authorityService.removeAuthority(adminGroup, usr);
+                    }
+
+                    model.put("", "Din bruger er blevet opdateret");
+
+                    AuthenticationUtil.clearCurrentSecurityContext();
+
+
+                }
+                else {
+
+                    model.put("", "wrong password ");
+                    System.out.println("no access");
+                }
+
+
             }
-            else {
-                authorityService.removeAuthority(adminGroup, usr);
+            catch (JSONException e) {
+                e.printStackTrace();
             }
 
-            model.put("", "Din bruger er blevet opdateret");
 
-            AuthenticationUtil.clearCurrentSecurityContext();
+            result.add(model);
 
-
+            try {
+                result.writeJSONString(webScriptResponse.getWriter());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            // commit the transaction
+            tx.commit();
         }
-        else {
-
-            model.put("", "wrong password ");
-            System.out.println("no access");
-        }
-
-
-        }
-        catch (JSONException e) {
-            e.printStackTrace();
+        catch (Throwable err)
+        {
+            try { if (tx != null) {tx.rollback();} } catch (Exception tex) {}
         }
 
 
-        result.add(model);
 
-        try {
-            result.writeJSONString(webScriptResponse.getWriter());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
     }
 }
