@@ -33,10 +33,8 @@
 		  parent="webscript">
 		<property name="nodeService" ref="NodeService"/>
 		<property name="dictionaryService" ref="DictionaryService"/>
-		<property name="CustomModelService" ref="customModelService"/>
 		<property name="authenticationService" ref="authenticationService"/>
 		<property name="authorityService" ref="authorityService"/>
-		<property name="serviceRegistry" ref="serviceRegistry"/>
 		<property name="gbproperties"> <ref bean="global-properties"/>
 		</property>
 	</bean>

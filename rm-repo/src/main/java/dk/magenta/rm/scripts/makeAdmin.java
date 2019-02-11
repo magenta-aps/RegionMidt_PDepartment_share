@@ -30,9 +30,12 @@ import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.AuthorityService;
 import org.alfresco.service.cmr.security.AuthorityType;
 import org.alfresco.service.cmr.security.PersonService;
+import org.alfresco.util.ApplicationContextHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.simple.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.extensions.webscripts.*;
 
 import javax.transaction.NotSupportedException;
@@ -52,23 +55,12 @@ public class makeAdmin extends AbstractWebScript {
         this.authenticationService = authenticationService;
     }
 
+    @Autowired
+    ApplicationContext ctx;
+
     private AuthenticationService authenticationService;
     private NodeService nodeService;
     private DictionaryService dictionaryService;
-    private CustomModelServiceImpl customModelService;
-
-    private PersonService personService;
-
-    public ServiceRegistry getServiceRegistry() {
-        return serviceRegistry;
-    }
-
-    public void setServiceRegistry(ServiceRegistry serviceRegistry) {
-        this.serviceRegistry = serviceRegistry;
-    }
-
-    ServiceRegistry serviceRegistry;
-
 
     private Properties gbproperties;
 
@@ -98,6 +90,10 @@ public class makeAdmin extends AbstractWebScript {
 
     @Override
     public void execute(WebScriptRequest webScriptRequest, WebScriptResponse webScriptResponse) throws IOException {
+
+
+        final ServiceRegistry serviceRegistry = (ServiceRegistry) ctx.getBean(ServiceRegistry.SERVICE_REGISTRY);
+
 
         UserTransaction tx = null;
         try
