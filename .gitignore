@@ -1,0 +1,9 @@
+.idea/
+rm-repo/.idea/
+rm-repo/rm-repo.iml
+rm-share/.idea/
+rm-share/rm-share.iml
+rm-share/target/
+rm-repo/rm-repo.iml
+rm-share/rm-share.iml
+rm-share/target/

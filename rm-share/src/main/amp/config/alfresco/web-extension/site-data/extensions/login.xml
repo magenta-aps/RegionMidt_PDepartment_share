@@ -1,0 +1,14 @@
+<extension>
+    <modules>
+        <module>
+            <id>Login Module</id>
+            <customizations>
+                <customization>
+                    <targetPackageRoot>org.alfresco.components</targetPackageRoot>
+                    <sourcePackageRoot>dk.magenta.rm.components</sourcePackageRoot>
+                </customization>
+            </customizations>
+            <auto-deploy>true</auto-deploy>
+        </module>
+    </modules>
+</extension>
