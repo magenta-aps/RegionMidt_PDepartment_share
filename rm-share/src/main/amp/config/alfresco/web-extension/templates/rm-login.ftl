@@ -102,7 +102,7 @@
 <body>
 
     <div class="login">
-        <img src="../res/login/rm.png" class="login__logo" height="62" width="128">
+        <img src="${url.context}/res/login/rm.png" class="login__logo" height="62" width="128">
 
         <form id="loginform" accept-charset="UTF-8" method="post" action="${url.context}/page/dologin" class="login__form">
             <label for="username" class="login__label">regionsID:</label>
